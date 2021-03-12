@@ -123,5 +123,4 @@ if __name__ == '__main__':
       ['tail', '-q', '-f', 'mina.log', '-f', '.mina-config/mina-prover.log', '-f', '.mina-config/mina-verifier.log', '-f' , '.mina-config/mina-best-tip.log']
   )
 
-  start_daemon()
-  active_loop()
+  inactive_loop()
