@@ -398,6 +398,7 @@ module Network_manager = struct
     let result =
       { Kubernetes_network.namespace= t.namespace
       ; constants= t.constants
+      ; seeds= t.seed_nodes
       ; block_producers= t.block_producer_nodes
       ; snark_coordinators= t.snark_coordinator_nodes
       ; archive_nodes= []

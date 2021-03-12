@@ -13,12 +13,25 @@ import signal
 import subprocess
 import sys
 import time
+from http.server import HTTPServer, BaseHTTPRequestHandler
+
+# all signals handled by this program
+ALL_SIGNALS = [signal.SIGCHLD, signal.SIGUSR1, signal.SIGUSR2]
 
 active_daemon_request = False
 inactive_daemon_request = False
 tail_process = None
 coda_process = None
 daemon_args = sys.argv[1:] if len(sys.argv) > 1 else []
+
+HTTPServer.timeout = 1
+
+class MockRequestHandler(BaseHTTPRequestHandler):
+  def do_GET(s):
+    s.send_response(200)
+    s.send_header('Content-Type', 'text/html')
+    s.end_headers()
+    s.wfile.write(b'<html><body>The daemon is currently offline.<br/><i>This broadcast was brought to you by the puppeteer mock server</i></body></html>')
 
 # just nooping on this signal suffices, since merely trapping it will cause
 # `signal.pause()` to resume
@@ -78,17 +91,21 @@ def stop_daemon():
 
 def inactive_loop():
   global active_daemon_request
-  while True:
-    signal.pause()
-    if active_daemon_request:
-      start_daemon()
-      active_daemon_request = False
-      break
 
-  active_loop()
+  with HTTPServer(('127.0.0.1', 3085), MockRequestHandler) as server:
+    while True:
+      server.handle_request()
+      signal.sigtimedwait(ALL_SIGNALS, 0)
+      if active_daemon_request:
+        start_daemon()
+        active_daemon_request = False
+        break
+
+    active_loop()
 
 def active_loop():
   global coda_process, inactive_daemon_request
+
   while True:
     signal.pause()
     status = coda_process.poll()

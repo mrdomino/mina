@@ -23,7 +23,8 @@ while [ -f daemon-active ]; do sleep 1; done'\
 
 RUN chmod +x find_puppeteer.sh start.sh stop.sh
 
-RUN curl -sL "https://raw.githubusercontent.com/MinaProtocol/mina/${CODA_BRANCH}/dockerfiles/coda_daemon_puppeteer.py" \
-  -o /root/coda_daemon_puppeteer.py
+ADD coda_daemon_puppeteer.py /root/coda_daemon_puppeteer.py
+# RUN curl -sL "https://raw.githubusercontent.com/MinaProtocol/mina/${CODA_BRANCH}/dockerfiles/coda_daemon_puppeteer.py" \
+#   -o /root/coda_daemon_puppeteer.py
 
 ENTRYPOINT ["/usr/bin/dumb-init", "python3", "/root/coda_daemon_puppeteer.py"]
