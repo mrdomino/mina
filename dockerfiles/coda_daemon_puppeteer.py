@@ -13,6 +13,7 @@ import signal
 import subprocess
 import sys
 import time
+from socketserver import TCPServer
 from http.server import HTTPServer, BaseHTTPRequestHandler
 
 # all signals handled by this program
@@ -24,6 +25,7 @@ tail_process = None
 coda_process = None
 daemon_args = sys.argv[1:] if len(sys.argv) > 1 else []
 
+TCPServer.allow_reuse_address = True
 HTTPServer.timeout = 1
 
 class MockRequestHandler(BaseHTTPRequestHandler):
@@ -101,7 +103,7 @@ def inactive_loop():
         active_daemon_request = False
         break
 
-    active_loop()
+  active_loop()
 
 def active_loop():
   global coda_process, inactive_daemon_request
