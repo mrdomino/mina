@@ -51,6 +51,11 @@ variable "mina_archive_schema" {
   default = ""
 }
 
+variable "archive_node_count" {
+  type    = number
+  default = 0
+}
+
 variable "coda_agent_image" {
   type    = string
   default = "codaprotocol/coda-user-agent:0.1.4"
@@ -136,6 +141,11 @@ variable "log_level" {
 }
 
 variable "log_snark_work_gossip" {
+  type    = bool
+  default = false
+}
+
+variable "log_precomputed_blocks" {
   type    = bool
   default = false
 }
