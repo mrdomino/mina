@@ -303,19 +303,7 @@ let main inputs =
         let%bind network, dsl =
           Deferred.bind init_result ~f:Malleable_error.of_or_error_hard
         in
-        (* TEMP: wait for a few seconds to allow for pods to be assigned to hosts *)
-        (* TODO: ^ do this dynamically *)
-        [%log info] "Waiting for node deployments to settle" ;
-        let%bind () =
-          after (Time.Span.of_sec 30.0)
-          |> Deferred.bind ~f:Malleable_error.return
-        in
-        let%bind () =
-          Engine.Network.all_nodes network
-          (* TODO: parallelize (requires accumlative hard errors) *)
-          |> Malleable_error.List.iter
-               ~f:(Engine.Network.Node.start ~fresh_state:false)
-        in
+        let%bind () = Engine.Network.initialize ~logger network in
         T.run network dsl )
   in
   let exit_reason, test_result =
