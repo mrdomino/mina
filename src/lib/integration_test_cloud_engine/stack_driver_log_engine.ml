@@ -185,6 +185,7 @@ module Subscription = struct
     in
     Or_error.combine_errors
       [delete_subscription_res; delete_sink_res; delete_topic_res]
+    |> Or_error.map ~f:(Fn.const ())
 
   let pull ~logger t =
     let open Deferred.Or_error.Let_syntax in
