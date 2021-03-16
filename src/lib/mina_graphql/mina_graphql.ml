@@ -655,19 +655,19 @@ module Types = struct
              unknown with the invariant unknown <= total, as well as the \
              currently liquid and locked balances." ~fields:(fun _ ->
             [ field "total" ~typ:(non_null uint64)
-                ~doc:"The amount of coda owned by the account"
+                ~doc:"The amount of mina owned by the account"
                 ~args:Arg.[]
                 ~resolve:(fun _ (b : t) -> Balance.to_uint64 b.total)
             ; field "unknown" ~typ:(non_null uint64)
                 ~doc:
-                  "The amount of coda owned by the account whose origin is \
+                  "The amount of mina owned by the account whose origin is \
                    currently unknown"
                 ~deprecated:(Deprecated None)
                 ~args:Arg.[]
                 ~resolve:(fun _ (b : t) -> Balance.to_uint64 b.unknown)
             ; field "liquid" ~typ:uint64
                 ~doc:
-                  "The amount of coda owned by the account which is currently \
+                  "The amount of mina owned by the account which is currently \
                    available. Can be null if bootstrapping."
                 ~deprecated:(Deprecated None)
                 ~args:Arg.[]
@@ -683,7 +683,7 @@ module Types = struct
                       else Unsigned.UInt64.zero ) )
             ; field "locked" ~typ:uint64
                 ~doc:
-                  "The amount of coda owned by the account which is currently \
+                  "The amount of mina owned by the account which is currently \
                    locked. Can be null if bootstrapping."
                 ~deprecated:(Deprecated None)
                 ~args:Arg.[]
@@ -874,7 +874,7 @@ module Types = struct
                  ~resolve:(fun _ {account; _} -> account.Account.Poly.timing)
              ; field "balance"
                  ~typ:(non_null AnnotatedBalance.obj)
-                 ~doc:"The amount of coda owned by the account"
+                 ~doc:"The amount of mina owned by the account"
                  ~args:Arg.[]
                  ~resolve:(fun _ {account; _} -> account.Account.Poly.balance)
              ; field "nonce" ~typ:string
@@ -1426,7 +1426,7 @@ module Types = struct
             ~args:Arg.[]
             ~resolve:(fun _ {fee_transfers; _} -> fee_transfers)
         ; field "coinbase" ~typ:(non_null uint64)
-            ~doc:"Amount of coda granted to the producer of this block"
+            ~doc:"Amount of mina granted to the producer of this block"
             ~args:Arg.[]
             ~resolve:(fun _ {coinbase; _} -> Currency.Amount.to_uint64 coinbase)
         ; field "coinbaseReceiverAccount" ~typ:AccountObj.account
@@ -1903,7 +1903,7 @@ module Types = struct
           [ from ~doc:"Public key of sender of payment"
           ; to_ ~doc:"Public key of recipient of payment"
           ; token_opt ~doc:"Token to send"
-          ; arg "amount" ~doc:"Amount of coda to send to to receiver"
+          ; arg "amount" ~doc:"Amount of mina to send to receiver"
               ~typ:(non_null uint64_arg)
           ; fee ~doc:"Fee amount in order to send payment"
           ; valid_until
@@ -2852,12 +2852,17 @@ module Queries = struct
                | Snapp_command _ ->
                    None ) )
 
-  let sync_state =
-    result_field_no_inputs "syncStatus" ~doc:"Network sync status" ~args:[]
+  let sync_status =
+    io_field "syncStatus" ~doc:"Network sync status" ~args:[]
       ~typ:(non_null Types.sync_status) ~resolve:(fun {ctx= coda; _} () ->
-        Result.map_error
-          (Mina_incremental.Status.Observer.value @@ Mina_lib.sync_status coda)
-          ~f:Error.to_string_hum )
+        let open Deferred.Let_syntax in
+        (* pull out sync status from status, so that result here
+             agrees with status; see issue #8251
+          *)
+        let%map {sync_status; _} =
+          Mina_commands.get_status ~flag:`Performance coda
+        in
+        Ok sync_status )
 
   let daemon_status =
     io_field "daemonStatus" ~doc:"Get running daemon status" ~args:[]
@@ -3319,7 +3324,7 @@ module Queries = struct
         Signed_command.check_signature user_command )
 
   let commands =
-    [ sync_state
+    [ sync_status
     ; daemon_status
     ; version
     ; owned_wallets (* deprecated *)
