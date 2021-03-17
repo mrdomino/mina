@@ -133,7 +133,7 @@ groups:
       description: "All nodes have best tips older than 15 slots (45 minutes) on network {{ $labels.testnet }}."
 
   - alert: NoNewSnarks
-    expr: min by (testnet) ((time() - 1609459200) - Coda_Snark_work_useful_snark_work_received_time_sec ${rule_filter}) >= 2 * 180
+    expr: min by (testnet) ((time() - 1609459200) - Coda_Snark_work_useful_snark_work_received_time_sec ${rule_filter}) >= 2 * 180 and max by (testnet) (Coda_Snark_work_pending_snark_work ${rule_filter}) != 0
     labels:
       testnet: "{{ $labels.testnet }}"
       severity: critical
